@@ -2,7 +2,7 @@ const passport = require('passport');
 const { app } = require('../app');
 const User = require('../database/models/user.model');
 const LocalStrategy = require('passport-local').Strategy;
-
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const {
   findUserPerEmail,
   findUserPerGoogleId,
@@ -41,6 +41,38 @@ passport.use(
           }
         } else {
           done(null, false, { message: 'user not found' });
+        }
+      } catch (e) {
+        done(e);
+      }
+    }
+  )
+);
+
+passport.use(
+  'google',
+  new GoogleStrategy(
+    {
+      clientID: 'ID',
+      clientSecret: 'SECRET',
+      callbackURL: '/auth/google/cb',
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      // console.log(util.inspect(profile, { compact: true, depth: 5, breakLength: 80 }));
+      try {
+        const user = await findUserPerGoogleId(profile.id);
+        if (user) {
+          done(null, user);
+        } else {
+          const newUser = new User({
+            username: profile.displayName,
+            local: {
+              googleId: profile.id,
+              email: profile.emails[0].value,
+            },
+          });
+          const savedUser = await newUser.save();
+          done(null, savedUser);
         }
       } catch (e) {
         done(e);

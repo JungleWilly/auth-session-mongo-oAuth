@@ -22,3 +22,25 @@ exports.sessionCreate = (req, res, next) => {
   })(req, res, next);
 };
 
+exports.googleAuth = (req, res, next) => {
+  passport.authenticate('google', {
+    scope:
+      'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+  })(req, res, next);
+};
+
+exports.googleAuthCb = (req, res, next) => {
+  passport.authenticate('google', {
+    successRedirect: '/protected',
+    failureRedirect: '/',
+  })(req, res, next);
+};
+
+exports.sessionDelete = (req, res, next) => {
+  req.logout((err) => {
+    if (err) {
+      return next(err);
+    }
+    res.redirect('/');
+  });
+};
